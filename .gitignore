@@ -1,0 +1,13 @@
+*.o
+*.bin
+TINIX.IMG
+disboot.asm
+*.bxrc
+nasm.bat.kk
+*.bat
+*linux
+*.com
+*.img
+*.IMG
+*.map
+chapter7/f/BIOS-bochs-latest
