@@ -206,7 +206,7 @@ LABEL_SEG_CODE32:
 TestRead:
 	xor	esi, esi
 	mov	ecx, 8
-.loop
+.loop:
 	mov	al, [es:esi]
 	call	DispAL
 	inc	esi
