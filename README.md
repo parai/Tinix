@@ -66,7 +66,101 @@ This is a series of course that teach you how to step by step writing an Operati
   sudo umount tmp
   # qemu-system-i386  -hdc ~/freedos/fdos11.img -boot c -fda TINIX.IMG
   qemu-system-i386 -hdc ~/msdos/msdos.vhd -boot c -fda TINIX.IMG
-  # then in the pop up window input pmtest.com
+  # then in the pop up window input A:\pmtest.com
   C:\> cls
   C:\> A:\pmtest.com
+```
+
+## chapter 4 build and debug cmdline
+
+* for chapter4 a, the same chapter1
+
+* for chapter4 b&c
+
+```sh
+  nasm -o boot.bin boot.asm
+  nasm -o loader.bin loader.asm
+  # generated a bootable floppy image
+  dd if=/dev/zero of=TINIX.IMG bs=512 count=2880
+  sudo mkfs.vfat TINIX.IMG
+  dd conv=notrunc if=boot.bin of=TINIX.IMG bs=512 count=1
+  mkdir -p tmp
+  sudo mount -t vfat TINIX.IMG tmp
+  sudo cp loader.bin tmp
+  sudo umount tmp
+
+  # use qemu to run
+  qemu-system-i386 -fda TINIX.IMG -boot a -m 64M
+
+```
+
+## chapter 4 build and debug cmdline
+
+* for a
+
+```sh
+  nasm -f elf hello.asm -o hello.o
+  ld -melf_i386 -s hello.o -o hello.exe
+  ./hello.exe
+```
+
+* for b
+
+```sh
+  nasm -f elf foo.asm -o foo.o
+  gcc -m32 -fno-stack-protector -fno-builtin -c bar.c -o bar.o
+  ld -melf_i386 -s foo.o bar.o -o foobar.exe
+  ./foobar.exe
+```
+
+* for c & d & e
+
+```sh
+  nasm -o boot.bin boot.asm
+  nasm -o loader.bin loader.asm
+  nasm -f elf kernel.asm -o kernel.o
+  ld -melf_i386 -s -Ttext 0x30400 kernel.o -o kernel.bin
+  # generated a bootable floppy image
+  dd if=/dev/zero of=TINIX.IMG bs=512 count=2880
+  sudo mkfs.vfat TINIX.IMG
+  dd conv=notrunc if=boot.bin of=TINIX.IMG bs=512 count=1
+  mkdir -p tmp
+  sudo mount -t vfat TINIX.IMG tmp
+  sudo cp loader.bin kernel.bin tmp
+  sudo umount tmp
+
+  # use qemu to run
+  qemu-system-i386 -fda TINIX.IMG -boot a -m 64M
+```
+
+* for g
+
+```sh
+  nasm -o boot.bin boot.asm
+  nasm -o loader.bin loader.asm
+  nasm -f elf kernel.asm -o kernel.o
+  nasm -f elf klib.asm -o klib.o
+  nasm -f elf string.asm -o string.o
+  gcc -m32 -fno-stack-protector -fno-builtin -c start.c -o start.o
+  ld -melf_i386 -s -Ttext 0x30400 kernel.o klib.o string.o start.o -o kernel.bin
+  # generated a bootable floppy image
+  dd if=/dev/zero of=TINIX.IMG bs=512 count=2880
+  sudo mkfs.vfat TINIX.IMG
+  dd conv=notrunc if=boot.bin of=TINIX.IMG bs=512 count=1
+  mkdir -p tmp
+  sudo mount -t vfat TINIX.IMG tmp
+  sudo cp loader.bin kernel.bin tmp
+  sudo umount tmp
+
+  # use qemu to run
+  qemu-system-i386 -fda TINIX.IMG -boot a -m 64M
+```
+
+* for h & i
+
+```sh
+make all
+sudo mkdir -p /mnt/floppy
+sudo make buildimg
+sudo make run
 ```

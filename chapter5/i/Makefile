@@ -16,8 +16,8 @@ ENTRYOFFSET	=   0x400
 # Programs, flags, etc.
 ASM		= nasm
 DASM		= ndisasm
-CC		= gcc
-LD		= ld
+CC		= gcc -m32 -fno-stack-protector
+LD		= ld -melf_i386
 ASMBFLAGS	= -I boot/include
 ASMKFLAGS	= -I include -f elf
 CFLAGS		= -I include -c -fno-builtin
@@ -52,25 +52,33 @@ realclean :
 disasm :
 	$(DASM) $(DASMFLAGS) $(TINIXKERNEL) > $(DASMOUTPUT)
 
+TINIX.IMG:
+	dd if=/dev/zero of=$@ bs=512 count=2880
+	mkfs.vfat $@
+
+run:
+	qemu-system-i386 -fda TINIX.IMG -boot a -m 64M
+
 # Write "boot.bin" & "loader.bin" into floppy image "TINIX.IMG"
 # We assume that "TINIX.IMG" exists in current folder
-buildimg :
+buildimg : TINIX.IMG
+	dd conv=notrunc if=boot/boot.bin of=TINIX.IMG bs=512 count=1
 	mount TINIX.IMG /mnt/floppy -o loop
 	cp -f boot/loader.bin /mnt/floppy/
 	cp -f kernel.bin /mnt/floppy
-	umount  /mnt/floppy
+	umount /mnt/floppy
 
 boot/boot.bin : boot/boot.asm boot/include/load.inc boot/include/fat12hdr.inc
-	$(ASM) $(ASMBFLAGS) -o $@ $<
+	(cd boot; $(ASM) $(ASMBFLAGS) -o $(notdir $@) $(notdir $<))
 
 boot/loader.bin : boot/loader.asm boot/include/load.inc boot/include/fat12hdr.inc boot/include/pm.inc
-	$(ASM) $(ASMBFLAGS) -o $@ $<
+	(cd boot; $(ASM) $(ASMBFLAGS) -o $(notdir $@) $(notdir $<))
 
 $(TINIXKERNEL) : $(OBJS)
 	$(LD) $(LDFLAGS) -o $(TINIXKERNEL) $(OBJS)
 
 kernel/kernel.o : kernel/kernel.asm
-	$(ASM) $(ASMKFLAGS) -o $@ $<
+	(cd kernel; $(ASM) $(ASMKFLAGS) -o $(notdir $@) $(notdir $<))
 
 kernel/start.o: kernel/start.c include/type.h include/const.h include/protect.h include/proto.h include/string.h include/global.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -88,7 +96,7 @@ lib/klibc.o: lib/klib.c include/type.h include/const.h include/protect.h include
 	$(CC) $(CFLAGS) -o $@ $<
 
 lib/klib.o : lib/klib.asm
-	$(ASM) $(ASMKFLAGS) -o $@ $<
+	(cd lib; $(ASM) $(ASMKFLAGS) -o $(notdir $@) $(notdir $<))
 
 lib/string.o : lib/string.asm
-	$(ASM) $(ASMKFLAGS) -o $@ $<
+	(cd lib; $(ASM) $(ASMKFLAGS) -o $(notdir $@) $(notdir $<))

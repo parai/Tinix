@@ -11,3 +11,4 @@ nasm.bat.kk
 *.IMG
 *.map
 chapter7/f/BIOS-bochs-latest
+*.exe
